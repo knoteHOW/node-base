@@ -5,7 +5,7 @@ services:
   - docker
 
 before_install:
-  - docker build -t knotehow/k-editor .
+  - docker build -t knotehow/node-base .
 
 script:
-  - docker run -e CI=true knotehow/k-editor npm run test
+  - docker run -e CI=true knotehow/node-base npm run test
