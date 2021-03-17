@@ -1,21 +1,49 @@
 const express = require('express');
-const bodyParser = require('body-parser');
+const morgan = require('morgan');
 const passport = require('passport');
 const helmet = require('helmet');
-require('dotenv').config();
+const cors = require('cors');
 
-const app = express();
+require('dotenv').config();
+const { sequelize } = require('./models');
 
 const rootRoutes = require('./routes');
 
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+sequelize.sync({ force: false })
+  .then(() => {
+    console.log('데이터베이스 연결 성공');
+  })
+  .catch((err) => {
+    console.error(err);
+  });
+  
+app.use(morgan('dev'));
 app.use(helmet());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
+app.use(cors());
+
+require('./config/passport')(passport);
 
 app.use('/', rootRoutes);
 
-const PORT = process.env.PORT || 5000;
+app.use((req, res, next) => {
+  const error =  new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
+  error.status = 404;
+  next(error);
+});
+
+app.use((err, req, res, next) => {
+  res.locals.message = err.message;
+  res.locals.error = process.env.NODE_ENV !== 'production' ? err : {};
+  res.status(err.status || 500);
+  res.status(404).send(err);
+});
+
 app.listen(PORT, () => {
   console.log(`Listening on port`, PORT);
 });
