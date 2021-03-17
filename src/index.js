@@ -19,7 +19,7 @@ sequelize.sync({ force: false })
   .catch((err) => {
     console.error(err);
   });
-  
+
 app.use(morgan('dev'));
 app.use(helmet());
 app.use(express.json());
